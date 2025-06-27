@@ -307,3 +307,35 @@ const structuredData = {
 - 機能別グループ化: 関連ファイルをまとめる
 - 一貫した命名: プロジェクト全体で統一
 - Co-location: 関連するものは近くに配置
+
+## Semantic Commit Messages
+
+コミットメッセージを一貫性のある形式で記述するためのルール。
+
+### フォーマット
+```
+<type>(<scope>): <subject>
+```
+
+- `<scope>` はオプション
+- `<subject>` は現在形で記述
+
+### タイプ一覧
+- **✨ feat**: 新機能追加（ユーザー向け）
+- **🐛 fix**: バグ修正（ユーザー向け）
+- **📚 docs**: ドキュメント変更
+- **💄 style**: フォーマット、セミコロン等（機能に影響なし）
+- **♻️ refactor**: 機能に影響しないコードの改善（変数名変更等）
+- **🧪 test**: テスト追加・修正（機能に影響なし）
+- **🔧 chore**: ビルドタスク更新等（機能に影響なし）
+
+### 例
+```bash
+feat: add hat wobble
+fix(auth): resolve login timeout issue
+docs: update API documentation
+style: fix missing semicolons
+refactor: rename getUserData to fetchUserProfile
+test: add unit tests for user service
+chore: update webpack config
+```
