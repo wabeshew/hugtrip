@@ -13,7 +13,6 @@ export function Header({ className }: HeaderProps) {
           <Link href="/" className="flex items-center space-x-2">
             <div className="text-2xl font-bold text-primary">HUGTRIP</div>
           </Link>
-
           <nav className="flex items-center space-x-4">
             <Link
               href="/about"

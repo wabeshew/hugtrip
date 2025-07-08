@@ -8,7 +8,7 @@ interface UseDragScrollOptions {
 
 /**
  * ScrollAreaでドラッグスクロールと慣性スクロールを実現するカスタムフック
- * 
+ *
  * @param options - 設定オプション
  * @param options.direction - スクロール方向 ('horizontal' | 'vertical' | 'both')
  * @param options.inertia - 慣性スクロールの有効/無効
@@ -21,23 +21,23 @@ export function useDragScroll({
 }: UseDragScrollOptions = {}) {
   // ScrollAreaコンポーネントへの参照
   const scrollRef = useRef<HTMLDivElement>(null)
-  
+
   // ドラッグ状態の管理
   const isDragging = useRef(false)
-  
+
   // ドラッグ開始時の座標とスクロール位置
   const startX = useRef(0)
   const startY = useRef(0)
   const scrollLeft = useRef(0)
   const scrollTop = useRef(0)
-  
+
   // 慣性スクロール用の速度計算
   const velocityX = useRef(0)
   const velocityY = useRef(0)
   const lastX = useRef(0)
   const lastY = useRef(0)
   const lastTime = useRef(0)
-  
+
   // アニメーションフレームID（慣性スクロール用）
   const animationId = useRef<number | null>(null)
 
@@ -105,7 +105,7 @@ export function useDragScroll({
       const currentTime = Date.now()
       const x = e.pageX
       const y = e.pageY
-      
+
       // ドラッグ開始点からの移動距離
       const walkX = x - startX.current
       const walkY = y - startY.current
@@ -187,13 +187,13 @@ export function useDragScroll({
 
       // ドラッグ状態を開始
       isDragging.current = true
-      
+
       // 初期位置とスクロール位置を記録
       startX.current = e.pageX
       startY.current = e.pageY
       scrollLeft.current = viewport.scrollLeft
       scrollTop.current = viewport.scrollTop
-      
+
       // 速度計算用の初期値をリセット
       velocityX.current = 0
       velocityY.current = 0

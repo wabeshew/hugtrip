@@ -206,3 +206,5 @@
     @apply bg-background text-foreground;
   }
 }
+
+@plugin "@iconify/tailwind4";

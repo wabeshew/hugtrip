@@ -1,77 +1,14 @@
 'use client'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { hotelsAtom } from '@/atoms'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useDragScroll } from '@/hooks/useDragScroll'
-import {
-  APIProvider,
-  AdvancedMarker,
-  Map as GoogleMap,
-  MapCameraChangedEvent,
-} from '@vis.gl/react-google-maps'
-import { useCallback, useEffect, useRef, useState } from 'react'
-
-async function fetchRakutenHotels(latitude: number, longitude: number) {
-  const applicationId = process.env.NEXT_PUBLIC_RAKUTEN_APP_ID || "YOUR_RAKUTEN_APP_ID_PLACEHOLDER";
-  const url = `https://app.rakuten.co.jp/services/api/Travel/SimpleHotelSearch/20170426?format=json&latitude=${latitude}&longitude=${longitude}&searchRadius=1&datumType=1&applicationId=${applicationId}`;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`Error fetching hotels: ${response.status} ${response.statusText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    console.log('Fetched hotel data:', data);
-    if (data.hotels && data.hotels.length > 0) {
-      console.log(`Found ${data.hotels.length} hotels.`);
-    } else {
-      console.log('No hotels found near this location.');
-    }
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch Rakuten hotels:', error);
-    // Depending on how you want to handle errors, you might re-throw or return a specific error object
-    throw error;
-  }
-}
+import { APIProvider } from '@vis.gl/react-google-maps'
+import { useAtom } from 'jotai'
+import { MainMap } from './_components/MainMap'
 
 export default function Home() {
+  const [hotels, setHotels] = useAtom(hotelsAtom)
   const dragProps = useDragScroll({ direction: 'horizontal' })
-  const defaultCenter = { lat: 35.6762, lng: 139.6503 }
-  const [mapCenter, setMapCenter] = useState(defaultCenter)
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  const handleCameraChange = useCallback((event: MapCameraChangedEvent) => {
-    const newCenter = event.detail.center
-    setMapCenter(newCenter)
-  }, [])
-
-  console.log('mapCenter', mapCenter)
-
-  useEffect(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current)
-    }
-    debounceTimeoutRef.current = setTimeout(() => {
-      if (mapCenter.lat !== 0 && mapCenter.lng !== 0) {
-        fetchRakutenHotels(mapCenter.lat, mapCenter.lng)
-      }
-    }, 500)
-
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current)
-      }
-    }
-  }, [mapCenter])
 
   const works = [
     { id: 1, title: 'Artwork 1', address: 'Tokyo, Japan' },
@@ -87,7 +24,7 @@ export default function Home() {
   ]
   return (
     <main className="relative h-full overflow-hidden">
-      <div className="w-full absolute top-1 left-1 z-10">
+      <div className="w-full absolute bottom-1 left-1 z-10">
         <ScrollArea
           ref={dragProps.scrollRef}
           className="whitespace-nowrap"
@@ -95,23 +32,39 @@ export default function Home() {
           style={dragProps.style}
         >
           <div className="flex space-x-4 p-4">
-            {works.map((artwork) => (
+            {hotels.map((hotel) => (
               <div
-                key={artwork.id}
-                className="w-64 bg-white rounded-lg shadow-md overflow-hidden"
+                key={hotel.hotel[0].hotelBasicInfo.hotelNo}
+                className="flex w-100 bg-white rounded-lg shadow-md overflow-hidden"
               >
-                <div>
+                <div className="flex-shrink-0">
                   <img
-                    src={`https://picsum.photos/240/160?random=${artwork.id}`}
-                    className="w-full h-40 object-cover "
-                    alt={artwork.title}
+                    src={
+                      hotel.hotel[0].hotelBasicInfo.hotelImageUrl ||
+                      'https://picsum.photos/240/160'
+                    }
+                    className="w-30 h-full object-cover select-none"
+                    draggable={false}
+                    alt={
+                      hotel.hotel[0].hotelBasicInfo.hotelName || 'Hotel Image'
+                    }
                   />
                 </div>
-                <div className="p-4">
-                  <div>{artwork.title}</div>
-                  <div>{artwork.address}</div>
-                  <ul>
-                    <li>アイコンがきます</li>
+                <div className="p-3">
+                  <div className="text-base font-bold">
+                    {hotel.hotel[0].hotelBasicInfo.hotelName}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {hotel.hotel[0].hotelBasicInfo.address1}
+                    {hotel.hotel[0].hotelBasicInfo.address2}
+                  </div>
+                  <ul className="text-xs mt-1 flex items-center gap-2">
+                    <li className="icon-[ic--round-star] text-primary text-xl" />
+                  </ul>
+                  <ul className="text-xs mt-1 flex items-center gap-2">
+                    <li className="flex items-center justify-center rounded-full bg-primary text-white w-7 h-7 p-1 box-border">
+                      <span className="icon-[hugeicons--baby-bed-01] text-xl font-bold" />
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -120,16 +73,8 @@ export default function Home() {
           <ScrollBar orientation="horizontal" className="hidden" />
         </ScrollArea>
       </div>
-      <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}>
-        <GoogleMap
-          defaultCenter={defaultCenter}
-          defaultZoom={10}
-          mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || ''}
-          className="h-full w-full"
-          onCameraChanged={handleCameraChange}
-        >
-          <AdvancedMarker position={{ lat: 35.6762, lng: 139.6503 }} />
-        </GoogleMap>
+      <APIProvider apiKey="">
+        <MainMap />
       </APIProvider>
     </main>
   )
