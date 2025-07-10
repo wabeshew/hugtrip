@@ -21,7 +21,7 @@ export type Hotel = {
 }[]
 
 export type HotelBasicInfo = {
-  hotelNo?: number | null
+  hotelNo: number
   hotelName?: string | null
   hotelInformationUrl?: string | null
   planListUrl?: string | null

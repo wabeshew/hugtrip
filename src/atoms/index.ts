@@ -3,4 +3,4 @@ import { atom } from 'jotai'
 
 // Hotel data atoms
 export const hotelsAtom = atom<{ hotel: Hotel }[]>([])
-export const selectedHotelAtom = atom<Hotel | null>(null)
+export const selectedHotelAtom = atom<number>(0)

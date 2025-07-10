@@ -1,5 +1,5 @@
 'use client'
-import { hotelsAtom } from '@/atoms'
+import { hotelsAtom, selectedHotelAtom } from '@/atoms'
 import type { ApiError, RakutenHotelResponse } from '@/types/api'
 import {
   AdvancedMarker,
@@ -11,6 +11,7 @@ import { useCallback, useState } from 'react'
 
 export function MainMap() {
   const [hotel, setHotels] = useAtom(hotelsAtom)
+  const [, setSelectedHotel] = useAtom(selectedHotelAtom)
   const map = useMap()
   const [mapCenter, setMapCenter] = useState({ lat: 35.6762, lng: 139.6503 })
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || ''
@@ -78,6 +79,9 @@ export function MainMap() {
           position={{
             lat: h.hotel[0].hotelBasicInfo.latitude || 0,
             lng: h.hotel[0].hotelBasicInfo.longitude || 0,
+          }}
+          onClick={() => {
+            setSelectedHotel(h.hotel[0].hotelBasicInfo.hotelNo)
           }}
         />
       ))}

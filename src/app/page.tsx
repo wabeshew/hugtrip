@@ -1,5 +1,5 @@
 'use client'
-import { hotelsAtom } from '@/atoms'
+import { hotelsAtom, selectedHotelAtom } from '@/atoms'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useDragScroll } from '@/hooks/useDragScroll'
 import { APIProvider } from '@vis.gl/react-google-maps'
@@ -7,21 +7,12 @@ import { useAtom } from 'jotai'
 import { MainMap } from './_components/MainMap'
 
 export default function Home() {
-  const [hotels, setHotels] = useAtom(hotelsAtom)
+  const [hotels] = useAtom(hotelsAtom)
+  const [selectedHotel] = useAtom(selectedHotelAtom)
   const dragProps = useDragScroll({ direction: 'horizontal' })
-
-  const works = [
-    { id: 1, title: 'Artwork 1', address: 'Tokyo, Japan' },
-    { id: 2, title: 'Artwork 2', address: 'Tokyo, Japan' },
-    { id: 3, title: 'Artwork 3', address: 'Tokyo, Japan' },
-    { id: 4, title: 'Artwork 4', address: 'Tokyo, Japan' },
-    { id: 5, title: 'Artwork 5', address: 'Tokyo, Japan' },
-    { id: 6, title: 'Artwork 6', address: 'Tokyo, Japan' },
-    { id: 7, title: 'Artwork 7', address: 'Tokyo, Japan' },
-    { id: 8, title: 'Artwork 8', address: 'Tokyo, Japan' },
-    { id: 9, title: 'Artwork 9', address: 'Tokyo, Japan' },
-    { id: 10, title: 'Artwork 10', address: 'Tokyo, Japan' },
-  ]
+  const isSelected = (hotelNo: number) => {
+    return selectedHotel === hotelNo
+  }
   return (
     <main className="relative h-full overflow-hidden">
       <div className="w-full absolute bottom-1 left-1 z-10">
@@ -35,7 +26,12 @@ export default function Home() {
             {hotels.map((hotel) => (
               <div
                 key={hotel.hotel[0].hotelBasicInfo.hotelNo}
-                className="flex w-100 bg-white rounded-lg shadow-md overflow-hidden"
+                className={`flex w-100 bg-white rounded-lg shadow-md overflow-hidden border-3
+                  ${
+                    isSelected(hotel.hotel[0].hotelBasicInfo.hotelNo)
+                      ? 'border-primary'
+                      : ''
+                  }`}
               >
                 <div className="flex-shrink-0">
                   <img
