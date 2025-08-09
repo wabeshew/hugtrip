@@ -1,25 +1,35 @@
 'use client'
-import { hotelsAtom, selectedHotelAtom } from '@/atoms'
-import type { ApiError, RakutenHotelResponse } from '@/types/api'
-import {
-  AdvancedMarker,
-  Map as GoogleMap,
-  useMap,
-} from '@vis.gl/react-google-maps'
+import { selectedHotelAtom } from '@/atoms'
+import { Map as GoogleMap, useMap } from '@vis.gl/react-google-maps'
 import { useAtom } from 'jotai'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { HotelMarker } from './HotelMarker'
+import { useHotelData } from './hooks/useHotelData'
 
 export function MainMap() {
-  const [hotel, setHotels] = useAtom(hotelsAtom)
-  const [, setSelectedHotel] = useAtom(selectedHotelAtom)
+  const { hotels, fetchHotelsData } = useHotelData()
+  const [selectedHotel, setSelectedHotel] = useAtom(selectedHotelAtom)
   const map = useMap()
   const [mapCenter, setMapCenter] = useState({ lat: 35.6762, lng: 139.6503 })
+  const [isProgrammaticPan, setIsProgrammaticPan] = useState(false)
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || ''
 
   const handleIdle = useCallback(() => {
     console.log('🚀 ~ handleIdle ~ handleIdle')
 
+    // プログラムによるパンの場合はAPI通信をスキップ
+    if (isProgrammaticPan) {
+      setIsProgrammaticPan(false)
+      return
+    }
+
     if (map) {
+      const zoom = map.getZoom()
+      console.log('🚀 ~ handleIdle ~ zoom:', zoom)
+      if (zoom && zoom < 15) {
+        return
+      }
+
       const center = map.getCenter()
       if (center) {
         const newCenter = {
@@ -27,43 +37,34 @@ export function MainMap() {
           lng: center.lng(),
         }
         setMapCenter(newCenter)
-        void fetchHotelsData(newCenter.lat, newCenter.lng)
+        fetchHotelsData(newCenter.lat, newCenter.lng)
       }
     }
-  }, [map])
+  }, [map, fetchHotelsData, isProgrammaticPan])
 
-  const fetchHotelsData = useCallback(
-    async (lat: number, lng: number): Promise<RakutenHotelResponse | null> => {
-      if (lat === 0 && lng === 0) return null
+  // selectedHotelが変更されたときに、そのホテルの座標をmapCenterにセット
+  useEffect(() => {
+    if (selectedHotel && hotels.length > 0) {
+      const selectedHotelData = hotels.find(
+        (hotel) => hotel.hotel[0].hotelBasicInfo.hotelNo === selectedHotel,
+      )
 
-      try {
-        const response = await fetch(
-          `/api/rakuten?latitude=${lat}&longitude=${lng}`,
-        )
-        if (!response.ok) {
-          const errorData: ApiError = await response.json()
-          throw new Error(
-            errorData.error || `HTTP error! status: ${response.status}`,
-          )
-        }
-        const data: RakutenHotelResponse = await response.json()
-
-        if (data.hotels && data.hotels.length > 0) {
-          setHotels(data.hotels)
-          console.log(`Found ${data.hotels.length} hotels.`)
-          console.log('Hotels:', data)
-        } else {
-          console.log('No hotels found near this location.')
+      if (selectedHotelData) {
+        const hotelLocation = {
+          lat: selectedHotelData.hotel[0].hotelBasicInfo.latitude || 35.6762,
+          lng: selectedHotelData.hotel[0].hotelBasicInfo.longitude || 139.6503,
         }
 
-        return data
-      } catch (error) {
-        console.error('Failed to fetch hotels:', error)
-        return null
+        // パン操作前にフラグを設定
+        setIsProgrammaticPan(true)
+
+        // マップの中心を選択されたホテルの位置に移動
+        if (map) {
+          map.panTo(hotelLocation)
+        }
       }
-    },
-    [setHotels],
-  )
+    }
+  }, [selectedHotel, hotels, map])
 
   return (
     <GoogleMap
@@ -73,16 +74,12 @@ export function MainMap() {
       className="h-full w-full"
       onIdle={handleIdle}
     >
-      {hotel.map((h) => (
-        <AdvancedMarker
-          key={h.hotel[0].hotelBasicInfo.hotelNo}
-          position={{
-            lat: h.hotel[0].hotelBasicInfo.latitude || 0,
-            lng: h.hotel[0].hotelBasicInfo.longitude || 0,
-          }}
-          onClick={() => {
-            setSelectedHotel(h.hotel[0].hotelBasicInfo.hotelNo)
-          }}
+      {hotels.map((hotel) => (
+        <HotelMarker
+          key={hotel.hotel[0].hotelBasicInfo.hotelNo}
+          hotel={hotel}
+          isSelected={selectedHotel === hotel.hotel[0].hotelBasicInfo.hotelNo}
+          onSelect={setSelectedHotel}
         />
       ))}
     </GoogleMap>
